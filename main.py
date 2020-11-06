@@ -1,6 +1,11 @@
 import numpy as np
 from functools import reduce
 
+import nnfs
+from nnfs.datasets import spiral_data
+
+nnfs.init()
+
 class Layer:
     def __init__(self, num_inputs, num_neurons):
         # Shape of weights is (inputs x neurons) to save doing a transpose
@@ -8,7 +13,7 @@ class Layer:
         self.biases = np.zeros((1, num_neurons))
 
     def __call__(self, inputs):
-        return np.dot(inputs, self.weights) + self.biases
+        return relu(np.dot(inputs, self.weights) + self.biases)
 
 class Network:
     def __init__(self):
@@ -17,15 +22,13 @@ class Network:
     def __call__(self, x):
         return reduce(lambda out, layer: layer(out), self.layers, x)
 
-np.random.seed(0)
+def relu(x):
+    return np.maximum(0, x)
+
+X, y = spiral_data(100, 3)
 
 net = Network()
-net.layers.append(Layer(4, 5))
-net.layers.append(Layer(5, 2))
-
-X = np.array([[1, 2, 3, 2.5],
-              [2.0, 5.0, -1.0, 2.0],
-              [-1.5, 2.7, 3.3, -0.8]])
+net.layers.append(Layer(2, 5))
 
 outputs = net(X)
 
