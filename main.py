@@ -1,11 +1,32 @@
 import numpy as np
+from functools import reduce
 
-inputs = np.array([1, 2, 3, 2.5])
-weights = np.array([[0.2, 0.8, -0.5, 1.0],
-                    [0.5, -0.91, 0.26, -0.5],
-                    [-0.26, -0.27, 0.17, 0.87]])
-biases = np.array([2, 3, 0.5])
+class Layer:
+    def __init__(self, num_inputs, num_neurons):
+        # Shape of weights is (inputs x neurons) to save doing a transpose
+        self.weights = 0.1 * np.random.randn(num_inputs, num_neurons)
+        self.biases = np.zeros((1, num_neurons))
 
-output = weights.dot(inputs) + biases
+    def __call__(self, inputs):
+        return np.dot(inputs, self.weights) + self.biases
 
-print(output)
+class Network:
+    def __init__(self):
+        self.layers = []
+
+    def __call__(self, x):
+        return reduce(lambda out, layer: layer(out), self.layers, x)
+
+np.random.seed(0)
+
+net = Network()
+net.layers.append(Layer(4, 5))
+net.layers.append(Layer(5, 2))
+
+X = np.array([[1, 2, 3, 2.5],
+              [2.0, 5.0, -1.0, 2.0],
+              [-1.5, 2.7, 3.3, -0.8]])
+
+outputs = net(X)
+
+print(outputs)
