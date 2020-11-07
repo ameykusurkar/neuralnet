@@ -16,8 +16,8 @@ class Layer:
         return relu(np.dot(inputs, self.weights) + self.biases)
 
 class Network:
-    def __init__(self):
-        self.layers = []
+    def __init__(self, layer_sizes):
+        self.layers = [Layer(*size) for size in layer_sizes]
 
     def __call__(self, x):
         return reduce(lambda out, layer: layer(out), self.layers, x)
@@ -27,8 +27,7 @@ def relu(x):
 
 X, y = spiral_data(100, 3)
 
-net = Network()
-net.layers.append(Layer(2, 5))
+net = Network([(2, 5)])
 
 outputs = net(X)
 
