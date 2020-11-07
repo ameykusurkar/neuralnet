@@ -8,12 +8,16 @@ nnfs.init()
 
 class Layer:
     def __init__(self, num_inputs, num_neurons):
-        # Shape of weights is (inputs x neurons) to save doing a transpose
-        self.weights = np.random.randn(num_inputs, num_neurons)
-        self.biases = np.zeros((1, num_neurons))
+        # Shape of weights is (neurons x inputs) to save doing a transpose
+        self.weights = np.random.randn(num_neurons, num_inputs)
+        self.biases = np.zeros((num_neurons, 1))
 
     def __call__(self, inputs):
-        return sigmoid(np.dot(inputs, self.weights) + self.biases)
+        return sigmoid(np.dot(self.weights, inputs) + self.biases)
+
+EPOCHS = 10
+BATCH_SIZE = 5
+LEARNING_RATE = 0.01
 
 class Network:
     def __init__(self, layer_sizes):
@@ -32,6 +36,6 @@ X, y = spiral_data(100, 3)
 
 net = Network([(2, 5)])
 
-outputs = net(X)
+outputs = net(X.T)
 
 print(outputs)
