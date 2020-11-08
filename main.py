@@ -1,10 +1,7 @@
 import numpy as np
 from functools import reduce
 
-import nnfs
-from nnfs.datasets import spiral_data
-
-nnfs.init()
+import mnist
 
 class Layer:
     def __init__(self, num_inputs, num_neurons):
@@ -30,11 +27,12 @@ def relu(x):
     return np.maximum(0, x)
 
 def sigmoid(x):
+    # TODO: Fix overflow
     return 1.0 / (1.0 + np.exp(-x))
 
-X, y = spiral_data(100, 3)
+X, y = mnist.training_images(), mnist.training_labels()
 
-net = Network([(2, 5)])
+net = Network([(784, 10)])
 
 outputs = net(X.T)
 
