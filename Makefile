@@ -1,8 +1,10 @@
 MNIST_DIR=data/mnist
 
-data: mnist
-
 mnist: $(MNIST_DIR)/training_images $(MNIST_DIR)/training_labels $(MNIST_DIR)/test_images $(MNIST_DIR)/test_labels
+
+mnist_images: $(MNIST_DIR)/training_images
+	mkdir -p mnist_images
+	generate_mnist_images
 
 $(MNIST_DIR):
 	mkdir -p $(MNIST_DIR)
@@ -25,3 +27,5 @@ $(MNIST_DIR)/test_labels: | $(MNIST_DIR)
 
 clean:
 	rm -r $(MNIST_DIR)
+
+.PHONY: mnist clean

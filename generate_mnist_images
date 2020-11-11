@@ -1,0 +1,11 @@
+#!/usr/bin/env python
+
+import numpy as np
+from PIL import Image
+
+with open("data/mnist/training_images", "rb") as f:
+    data = np.frombuffer(f.read(), dtype=np.uint8)
+    images = data[16:].reshape(60000, 28, 28)
+    for idx, i in enumerate(images):
+        img = Image.fromarray(255 - i, "L")
+        img.save(f"mnist_images/training_{idx}.png")
