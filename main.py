@@ -32,7 +32,8 @@ def sigmoid(x):
 
 X, y = mnist.training_images(), mnist.training_labels()
 
-net = Network([(784, 10)])
+num_inputs, num_outputs = X.shape[1], y.shape[1]
+net = Network([(num_inputs, num_outputs)])
 
 outputs = net(X.T)
 
