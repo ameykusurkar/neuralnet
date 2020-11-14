@@ -1,5 +1,8 @@
 MNIST_DIR=data/mnist
 
+install:
+	pip install -r requirements.txt
+
 mnist: $(MNIST_DIR)/training_images $(MNIST_DIR)/training_labels $(MNIST_DIR)/test_images $(MNIST_DIR)/test_labels
 
 mnist_images: $(MNIST_DIR)/training_images
