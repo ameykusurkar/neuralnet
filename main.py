@@ -56,26 +56,25 @@ def normalise(x):
     m, s = x.mean(), x.std()
     return (x - m) / s
 
-X, y = mnist.training_images(), mnist.training_labels()
-X = normalise(X)
-
-num_inputs, num_outputs = X.shape[1], y.shape[1]
-net = Network(num_inputs, num_outputs)
+x_train, y_train = mnist.training_images(), mnist.training_labels()
+x_train = normalise(x_train)
 
 x_test, y_test = mnist.test_images(), mnist.test_labels()
 x_test = normalise(x_test)
+
+net = Network(x_train.shape[1], y_train.shape[1])
 
 LEARNING_RATE = 3
 EPOCHS = 10
 BATCH_SIZE = 100
 
-X_mini_batched = X.reshape(-1, BATCH_SIZE, X.shape[1])
-y_mini_batched = y.reshape(-1, BATCH_SIZE, y.shape[1])
+x_train_batched = x_train.reshape(-1, BATCH_SIZE, x_train.shape[1])
+y_train_batched = y_train.reshape(-1, BATCH_SIZE, y_train.shape[1])
 
 for i in range(EPOCHS):
-    for x_mini, y_mini in zip(X_mini_batched, y_mini_batched):
+    for x_mini, y_mini in zip(x_train_batched, y_train_batched):
         net.grad_desc(x_mini, y_mini, LEARNING_RATE)
 
-    cst = net.cost(X, y)
+    cst = net.cost(x_train, y_train)
     acc = net.accuracy(x_test, y_test)
     print(f"{i}: cost = {cst:.5f}, accuracy = {acc:.3f}")
