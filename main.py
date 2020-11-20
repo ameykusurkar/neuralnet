@@ -4,8 +4,6 @@ import mnist
 
 np.random.seed(0)
 
-LEARNING_RATE = 3
-
 class Network:
     def __init__(self, input_size, output_size):
         self.weights = np.random.randn(output_size, input_size)
@@ -31,16 +29,12 @@ class Network:
         d_biases = d_c_wrt_z.mean(axis=1, keepdims=True)
         return (d_weights, d_biases)
 
-    def grad_desc(self, x, y):
-        choice = np.random.choice(60000, 600)
-        x_mini = x[choice]
-        y_mini = y[choice]
+    def grad_desc(self, x, y, lr):
+        self.forward(x)
+        d_weights, d_biases = self.nudges(x, y)
 
-        self.forward(x_mini)
-        d_weights, d_biases = self.nudges(x_mini, y_mini)
-
-        self.weights -= LEARNING_RATE * d_weights
-        self.biases -= LEARNING_RATE * d_biases
+        self.weights -= lr * d_weights
+        self.biases -= lr * d_biases
 
     def cost(self, x, y):
         preds = self.forward(x)
@@ -70,13 +64,18 @@ net = Network(num_inputs, num_outputs)
 
 x_test, y_test = mnist.test_images(), mnist.test_labels()
 x_test = normalise(x_test)
-cst = net.cost(X, y)
-acc = net.accuracy(x_test, y_test)
-print(f"cost = {cst:.5f}, accuracy = {acc:.3f}")
 
-for i in range(1000):
-    net.grad_desc(X, y)
-    if i % 100 == 0:
-        cst = net.cost(X, y)
-        acc = net.accuracy(x_test, y_test)
-        print(f"{i}: cost = {cst:.5f}, accuracy = {acc:.3f}")
+LEARNING_RATE = 3
+EPOCHS = 10
+BATCH_SIZE = 100
+
+X_mini_batched = X.reshape(-1, BATCH_SIZE, X.shape[1])
+y_mini_batched = y.reshape(-1, BATCH_SIZE, y.shape[1])
+
+for i in range(EPOCHS):
+    for x_mini, y_mini in zip(X_mini_batched, y_mini_batched):
+        net.grad_desc(x_mini, y_mini, LEARNING_RATE)
+
+    cst = net.cost(X, y)
+    acc = net.accuracy(x_test, y_test)
+    print(f"{i}: cost = {cst:.5f}, accuracy = {acc:.3f}")
