@@ -4,27 +4,29 @@ import mnist
 
 np.random.seed(0)
 
-# j:10, k: 16 (hidden), m: 784
-HIDDEN_SIZE = 16
-
 class Network:
-    def __init__(self, input_size, output_size):
-        self.weights0 = np.random.randn(HIDDEN_SIZE, input_size)
-        self.biases0 = np.zeros((HIDDEN_SIZE, 1))
+    def __init__(self, layer_sizes):
+        self.weights = []
+        self.biases = []
 
-        self.weights1 = np.random.randn(output_size, HIDDEN_SIZE)
-        self.biases1 = np.zeros((output_size, 1))
+        for l1, l2 in pairwise(layer_sizes):
+            self.weights.append(np.random.randn(l2, l1))
+            self.biases.append(np.zeros((l2, 1)))
 
     def forward(self, x):
         """
         x: (m, n)
         """
-        self.z0 = np.dot(self.weights0, x) + self.biases0 # k, n
-        self.a0 = sigmoid(self.z0) # k, n
+        self.z = []
+        self.a = []
 
-        self.z1 = np.dot(self.weights1, self.a0) + self.biases1 # j, n
-        self.a1 = sigmoid(self.z1) # j, n
-        return self.a1
+        for w, b in zip(self.weights, self.biases):
+            a = self.a[-1] if self.a else x
+            z = np.dot(w, a) + b
+            self.z.append(z)
+            self.a.append(sigmoid(z))
+
+        return self.a[-1]
 
     def accuracy(self, x, y):
         preds = self.forward(x) # j, n
@@ -32,14 +34,15 @@ class Network:
         labels = y.argmax(axis=0) # y: j, n
         return (pred_labels == labels).astype(np.float).mean()
 
+    # TODO: Refactor to be iterative
     def nudges(self, x, y):
         """
         x: (m, n)
         y: (j, n)
         """
-        dz1_dw1 = self.a0.T # n, k
-        da1_dz1 = d_sigmoid(self.z1) # j, n
-        dc_da1 = self.a1 - y # j, n
+        dz1_dw1 = self.a[0].T # n, k
+        da1_dz1 = d_sigmoid(self.z[1]) # j, n
+        dc_da1 = self.a[1] - y # j, n
 
         # Derivative of the cost wrt to the neuron outputs `z0`
         dc_dz1 = da1_dz1 * dc_da1 # j, n
@@ -51,11 +54,11 @@ class Network:
 
         ### Previous layer gradients
 
-        dz1_da0 = self.weights1.T # k, j
+        dz1_da0 = self.weights[1].T # k, j
         dc_da0 = dz1_da0.dot(dc_dz1) # k, n
 
         dz0_dw0 = x.T # n, m
-        da0_dz0 = d_sigmoid(self.z0) # k, n
+        da0_dz0 = d_sigmoid(self.z[0]) # k, n
 
         # Derivative of the cost wrt to the neuron outputs `z1`
         dc_dz0 = da0_dz0 * dc_da0 # k, n
@@ -71,11 +74,11 @@ class Network:
         self.forward(x)
         d_weights1, d_biases1, d_weights0, d_biases0 = self.nudges(x, y)
 
-        self.weights1 -= lr * d_weights1
-        self.biases1 -= lr * d_biases1
+        self.weights[1] -= lr * d_weights1
+        self.biases[1] -= lr * d_biases1
 
-        self.weights0 -= lr * d_weights0
-        self.biases0 -= lr * d_biases0
+        self.weights[0] -= lr * d_weights0
+        self.biases[0] -= lr * d_biases0
 
     def cost(self, x, y):
         preds = self.forward(x)
@@ -100,17 +103,29 @@ def normalise(x):
     m, s = x.mean(), x.std()
     return (x - m) / s
 
+def pairwise(xs):
+    """
+    Returns a pairwise generator of a flat array.
+
+    >>> list(pairwise([1, 2, 3, 4]))
+    [(1, 2), (2, 3), (3, 4)]
+    """
+    return zip(xs, xs[1:])
+
 x_train, y_train = mnist.training_images(), mnist.training_labels()
 x_train = normalise(x_train)
 
 x_test, y_test = mnist.test_images(), mnist.test_labels()
 x_test = normalise(x_test)
 
-net = Network(x_train.shape[1], y_train.shape[1])
-
 LEARNING_RATE = 3
 EPOCHS = 10
 BATCH_SIZE = 100
+
+# j:10, k: 16 (hidden), m: 784
+HIDDEN_SIZE = 16
+
+net = Network([x_train.shape[1], HIDDEN_SIZE, y_train.shape[1]])
 
 x_train_batched = x_train.reshape(-1, BATCH_SIZE, x_train.shape[1])
 y_train_batched = y_train.reshape(-1, BATCH_SIZE, y_train.shape[1])
