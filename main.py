@@ -37,26 +37,45 @@ class Network:
         x: (m, n)
         y: (j, n)
         """
-        dz1_dw1 = self.a0.T # k, n
+        dz1_dw1 = self.a0.T # n, k
         da1_dz1 = d_sigmoid(self.z1) # j, n
         dc_da1 = self.a1 - y # j, n
 
-        # Derivative of the cost wrt to the neuron outputs `z`
-        dc_dz1 = da1_dz1 * dc_da1
+        # Derivative of the cost wrt to the neuron outputs `z0`
+        dc_dz1 = da1_dz1 * dc_da1 # j, n
 
         # Derivative of the cost wrt to the weights and biases,
         # averaged over all training samples
         dc_dw1 = dc_dz1.dot(dz1_dw1) / x.shape[1]
         dc_db1 = dc_dz1.mean(axis=1, keepdims=True)
 
-        return (dc_dw1, dc_db1)
+        ### Previous layer gradients
+
+        dz1_da0 = self.weights1.T # k, j
+        dc_da0 = dz1_da0.dot(dc_dz1) # k, n
+
+        dz0_dw0 = x.T # n, m
+        da0_dz0 = d_sigmoid(self.z0) # k, n
+
+        # Derivative of the cost wrt to the neuron outputs `z1`
+        dc_dz0 = da0_dz0 * dc_da0 # k, n
+
+        # Derivative of the cost wrt to the weights and biases,
+        # averaged over all training samples
+        dc_dw0 = dc_dz0.dot(dz0_dw0) / x.shape[1]
+        dc_db0 = dc_dz0.mean(axis=1, keepdims=True)
+
+        return (dc_dw1, dc_db1, dc_dw0, dc_db0)
 
     def grad_desc(self, x, y, lr):
         self.forward(x)
-        d_weights, d_biases = self.nudges(x, y)
+        d_weights1, d_biases1, d_weights0, d_biases0 = self.nudges(x, y)
 
-        self.weights1 -= lr * d_weights
-        self.biases1 -= lr * d_biases
+        self.weights1 -= lr * d_weights1
+        self.biases1 -= lr * d_biases1
+
+        self.weights0 -= lr * d_weights0
+        self.biases0 -= lr * d_biases0
 
     def cost(self, x, y):
         preds = self.forward(x)
