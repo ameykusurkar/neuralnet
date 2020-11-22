@@ -8,13 +8,10 @@ def accuracy(preds, y):
     labels = y.argmax(axis=0) # y: j, n
     return (pred_labels == labels).astype(np.float).mean()
 
-def mse(preds, y):
-    return 0.5 * ((preds - y) ** 2).sum(axis=0).mean()
-
 x_train, y_train = mnist.training_images(), mnist.training_labels()
 x_test, y_test = mnist.test_images(), mnist.test_labels()
 
-LEARNING_RATE = 5
+LEARNING_RATE = 0.8
 EPOCHS = 10
 BATCH_SIZE = 10
 
@@ -38,6 +35,6 @@ for i in range(EPOCHS):
 
     y_train_hat = net.forward(x_train.T)
     y_test_hat = net.forward(x_test.T)
-    cost = mse(y_train_hat, y_train.T)
+    cost = net.loss.forward(y_train_hat, y_train.T)
     acc = accuracy(y_test_hat, y_test.T)
     print(f"Epoch {i+1}/{EPOCHS}: cost = {cost:.5f}, accuracy = {acc:.3f}")

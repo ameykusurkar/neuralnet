@@ -4,15 +4,15 @@ np.random.seed(0)
 
 class Network:
     def __init__(self, layers):
-        self.loss = MSE()
+        self.loss = CrossEntropy
         self.sequential = Sequential(layers)
 
     def forward(self, x):
-        a = self.sequential.forward(x)
-        return self.loss.forward(a)
+        self.a = self.sequential.forward(x)
+        return self.a
 
     def backward(self, y):
-        dc_da = self.loss.backward(y)
+        dc_da = self.loss.backward(self.a, y)
         self.sequential.backward(dc_da)
 
     def descend(self, lr):
@@ -23,7 +23,6 @@ class Sequential:
         self.layers = layers
 
     def forward(self, x):
-        self.x = x
         a = x
         for layer in self.layers:
             a = layer.forward(a)
@@ -64,13 +63,24 @@ class Linear:
         self.weights -= lr * dc_dw
         self.biases -= lr * dc_db
 
-class MSE:
-    def forward(self, x):
-        self.x = x
-        return x
+class MeanSquaredError:
+    @staticmethod
+    def forward(y_hat, y):
+        return 0.5 * ((y_hat - y) ** 2).sum(axis=0).mean()
 
-    def backward(self, y):
-        return self.x - y
+    @staticmethod
+    def backward(y_hat, y):
+        return y_hat - y
+
+class CrossEntropy:
+    @staticmethod
+    def forward(y_hat, y):
+        loss = y_hat * np.log(y_hat) + (1 - y) * np.log(1 - y_hat)
+        return -loss.sum(axis=0).mean()
+
+    @staticmethod
+    def backward(y_hat, y):
+        return (1 - y) / (1 - y_hat) - (y / y_hat)
 
 class Sigmoid:
     def forward(self, x):
