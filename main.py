@@ -4,30 +4,23 @@ import mnist
 import network
 
 class Network:
-    def __init__(self, layer_sizes):
+    def __init__(self, layers):
         self.cost_function = network.Cost()
-        self.layers = []
-        for input_size, output_size in pairwise(layer_sizes):
-            layer = network.Linear(input_size, output_size)
-            activation = network.Sigmoid()
-            self.layers.append(layer)
-            self.layers.append(activation)
+        self.sequential = network.Sequential(layers)
 
     def forward(self, x):
         """
         x: (m, n)
         """
-        self.x = x
-        a = x
-        for layer in self.layers:
-            a = layer.forward(a)
-        a = self.cost_function.forward(a)
-        return a
+        a = self.sequential.forward(x)
+        return self.cost_function.forward(a)
 
-    def backward(self, y, lr):
+    def backward(self, y):
         dc_da = self.cost_function.backward(y)
-        for layer in reversed(self.layers):
-            dc_da = layer.backward(dc_da, lr)
+        self.sequential.backward(dc_da)
+
+    def descend(self, lr):
+        self.sequential.descend(lr)
 
     def accuracy(self, x, y):
         preds = self.forward(x) # j, n
@@ -71,7 +64,12 @@ LEARNING_RATE = 5
 EPOCHS = 10
 BATCH_SIZE = 10
 
-net = Network([x_train.shape[1], 30, y_train.shape[1]])
+net = Network([
+    network.Linear(x_train.shape[1], 30),
+    network.Sigmoid(),
+    network.Linear(30, y_train.shape[1]),
+    network.Sigmoid(),
+])
 
 x_train_batched = x_train.reshape(-1, BATCH_SIZE, x_train.shape[1])
 y_train_batched = y_train.reshape(-1, BATCH_SIZE, y_train.shape[1])
@@ -81,7 +79,8 @@ print(f"Epochs: {EPOCHS}, Batch size: {BATCH_SIZE}, Learning rate: {LEARNING_RAT
 for i in range(EPOCHS):
     for x_mini, y_mini in zip(x_train_batched, y_train_batched):
         net.forward(x_mini.T)
-        net.backward(y_mini.T, lr=LEARNING_RATE)
+        net.backward(y_mini.T)
+        net.descend(LEARNING_RATE)
 
     cst = net.cost(x_train.T, y_train.T)
     acc = net.accuracy(x_test.T, y_test.T)
