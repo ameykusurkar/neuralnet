@@ -119,6 +119,8 @@ net = Network([x_train.shape[1], 30, y_train.shape[1]])
 x_train_batched = x_train.reshape(-1, BATCH_SIZE, x_train.shape[1])
 y_train_batched = y_train.reshape(-1, BATCH_SIZE, y_train.shape[1])
 
+print("Training against the MNIST dataset")
+print(f"Epochs: {EPOCHS}, Batch size: {BATCH_SIZE}, Learning rate: {LEARNING_RATE}")
 for i in range(EPOCHS):
     for x_mini, y_mini in zip(x_train_batched, y_train_batched):
         net.grad_desc(x_mini.T, y_mini.T, LEARNING_RATE)
