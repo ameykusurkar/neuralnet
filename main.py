@@ -5,7 +5,7 @@ import network
 
 class Network:
     def __init__(self, layers):
-        self.cost_function = network.Cost()
+        self.loss = network.MSE()
         self.sequential = network.Sequential(layers)
 
     def forward(self, x):
@@ -13,10 +13,10 @@ class Network:
         x: (m, n)
         """
         a = self.sequential.forward(x)
-        return self.cost_function.forward(a)
+        return self.loss.forward(a)
 
     def backward(self, y):
-        dc_da = self.cost_function.backward(y)
+        dc_da = self.loss.backward(y)
         self.sequential.backward(dc_da)
 
     def descend(self, lr):

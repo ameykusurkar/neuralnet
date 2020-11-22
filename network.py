@@ -32,16 +32,6 @@ class Linear:
         return np.dot(self.weights, x) + self.biases # out, n
 
     def backward(self, dc_dz):
-        dc_dw, dc_db, dc_dx = self.compute_grad(dc_dz)
-        self.grad = (dc_dw, dc_db)
-        return dc_dx
-
-    def descend(self, lr):
-        dc_dw, dc_db = self.grad
-        self.weights -= lr * dc_dw
-        self.biases -= lr * dc_db
-
-    def compute_grad(self, dc_dz):
         # dc_dz: out, n
         dz_dw = self.x.T # n, in
 
@@ -51,9 +41,15 @@ class Linear:
         dz_dx = self.weights.T # in, out
         dc_dx = dz_dx.dot(dc_dz) # in, n
 
-        return dc_dw, dc_db, dc_dx
+        self.grad = (dc_dw, dc_db)
+        return dc_dx
 
-class Cost:
+    def descend(self, lr):
+        dc_dw, dc_db = self.grad
+        self.weights -= lr * dc_dw
+        self.biases -= lr * dc_db
+
+class MSE:
     def forward(self, x):
         self.x = x
         return x
