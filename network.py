@@ -2,6 +2,22 @@ import numpy as np
 
 np.random.seed(0)
 
+class Network:
+    def __init__(self, layers):
+        self.loss = MSE()
+        self.sequential = Sequential(layers)
+
+    def forward(self, x):
+        a = self.sequential.forward(x)
+        return self.loss.forward(a)
+
+    def backward(self, y):
+        dc_da = self.loss.backward(y)
+        self.sequential.backward(dc_da)
+
+    def descend(self, lr):
+        self.sequential.descend(lr)
+
 class Sequential:
     def __init__(self, layers):
         self.layers = layers
@@ -34,11 +50,10 @@ class Linear:
     def backward(self, dc_dz):
         # dc_dz: out, n
         dz_dw = self.x.T # n, in
+        dz_dx = self.weights.T # in, out
 
         dc_dw = dc_dz.dot(dz_dw) / self.x.shape[1] # out, in
         dc_db = dc_dz.mean(axis=1, keepdims=True) # out, 1
-
-        dz_dx = self.weights.T # in, out
         dc_dx = dz_dx.dot(dc_dz) # in, n
 
         self.grad = (dc_dw, dc_db)
