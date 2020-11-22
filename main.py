@@ -8,8 +8,10 @@ class Network:
         self.cost_function = network.Cost()
         self.layers = []
         for input_size, output_size in pairwise(layer_sizes):
-            layer = network.Layer(input_size, output_size)
+            layer = network.Linear(input_size, output_size)
+            activation = network.Sigmoid()
             self.layers.append(layer)
+            self.layers.append(activation)
 
     def forward(self, x):
         """

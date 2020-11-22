@@ -2,20 +2,16 @@ import numpy as np
 
 np.random.seed(0)
 
-class Layer:
+class Linear:
     def __init__(self, input_size, output_size):
         self.weights = np.random.randn(output_size, input_size)
         self.biases = np.zeros((output_size, 1))
-        self.activation = Sigmoid()
 
     def forward(self, x):
         self.x = x # in, n
-        self.z = np.dot(self.weights, x) + self.biases # out, n
-        self.a = self.activation.forward(self.z) # out, n
-        return self.a
+        return np.dot(self.weights, x) + self.biases # out, n
 
-    def backward(self, dc_da, lr):
-        dc_dz = self.activation.backward(dc_da)
+    def backward(self, dc_dz, lr):
         dc_dw, dc_db, dc_dx = self.compute_linear_grad(dc_dz)
 
         self.weights -= lr * dc_dw
@@ -47,7 +43,7 @@ class Sigmoid:
         self.x = x
         return sigmoid(x)
 
-    def backward(self, dc_dy):
+    def backward(self, dc_dy, lr):
         return d_sigmoid(self.x) * dc_dy
 
 def sigmoid(x):
