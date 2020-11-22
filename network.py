@@ -6,25 +6,25 @@ class Layer:
     def __init__(self, input_size, output_size):
         self.weights = np.random.randn(output_size, input_size)
         self.biases = np.zeros((output_size, 1))
+        self.activation = Sigmoid()
 
     def forward(self, x):
         self.x = x # in, n
         self.z = np.dot(self.weights, x) + self.biases # out, n
-        self.a = sigmoid(self.z) # out, n
+        self.a = self.activation.forward(self.z) # out, n
         return self.a
 
     def backward(self, dc_da, lr):
-        dc_dw, dc_db, dc_dx = self.compute_grad(dc_da)
+        dc_dz = self.activation.backward(dc_da)
+        dc_dw, dc_db, dc_dx = self.compute_linear_grad(dc_dz)
 
         self.weights -= lr * dc_dw
         self.biases -= lr * dc_db
         return dc_dx
 
-    def compute_grad(self, dc_da):
-        # dc_da: out, n
-        da_dz = d_sigmoid(self.z) # out, n
+    def compute_linear_grad(self, dc_dz):
+        # dc_dz: out, n
         dz_dw = self.x.T # n, in 
-        dc_dz = dc_da * da_dz # out, n
 
         dc_dw = dc_dz.dot(dz_dw) / self.x.shape[1] # out, in
         dc_db = dc_dz.mean(axis=1, keepdims=True) # out, 1
@@ -41,6 +41,14 @@ class Cost:
 
     def backward(self, y):
         return self.x - y
+
+class Sigmoid:
+    def forward(self, x):
+        self.x = x
+        return sigmoid(x)
+
+    def backward(self, dc_dy):
+        return d_sigmoid(self.x) * dc_dy
 
 def sigmoid(x):
     return 1.0 / (1.0 + np.exp(-x))

@@ -16,11 +16,11 @@ class Network:
         x: (m, n)
         """
         self.x = x
-        self.a = x
+        a = x
         for layer in self.layers:
-            self.a = layer.forward(self.a)
-        self.a = self.cost_function.forward(self.a)
-        return self.a
+            a = layer.forward(a)
+        a = self.cost_function.forward(a)
+        return a
 
     def backward(self, y, lr):
         dc_da = self.cost_function.backward(y)
