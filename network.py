@@ -18,7 +18,7 @@ class Layer:
 
         self.weights -= lr * dc_dw
         self.biases -= lr * dc_db
-        self.dc_dx = dc_dx
+        return dc_dx
 
     def compute_grad(self, dc_da):
         # dc_da: out, n
@@ -33,6 +33,14 @@ class Layer:
         dc_dx = dz_dx.dot(dc_dz) # in, n
 
         return dc_dw, dc_db, dc_dx
+
+class Cost:
+    def forward(self, x):
+        self.x = x
+        return x
+
+    def backward(self, y):
+        return self.x - y
 
 def sigmoid(x):
     return 1.0 / (1.0 + np.exp(-x))

@@ -5,6 +5,7 @@ import network
 
 class Network:
     def __init__(self, layer_sizes):
+        self.cost_function = network.Cost()
         self.layers = []
         for input_size, output_size in pairwise(layer_sizes):
             layer = network.Layer(input_size, output_size)
@@ -18,13 +19,13 @@ class Network:
         self.a = x
         for layer in self.layers:
             self.a = layer.forward(self.a)
+        self.a = self.cost_function.forward(self.a)
         return self.a
 
     def backward(self, y, lr):
-        dc_da = self.a - y
+        dc_da = self.cost_function.backward(y)
         for layer in reversed(self.layers):
-            layer.backward(dc_da, lr)
-            dc_da = layer.dc_dx
+            dc_da = layer.backward(dc_da, lr)
 
     def accuracy(self, x, y):
         preds = self.forward(x) # j, n
