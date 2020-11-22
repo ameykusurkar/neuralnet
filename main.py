@@ -34,51 +34,43 @@ class Network:
         labels = y.argmax(axis=0) # y: j, n
         return (pred_labels == labels).astype(np.float).mean()
 
-    # TODO: Refactor to be iterative
     def nudges(self, x, y):
         """
         x: (m, n)
         y: (j, n)
         """
-        dz1_dw1 = self.a[0].T # n, k
-        da1_dz1 = d_sigmoid(self.z[1]) # j, n
-        dc_da1 = self.a[1] - y # j, n
+        dc_dw = [None] * len(self.weights)
+        dc_db = [None] * len(self.biases)
 
-        # Derivative of the cost wrt to the neuron outputs `z0`
-        dc_dz1 = da1_dz1 * dc_da1 # j, n
+        dc_dz = [None] * len(self.weights)
 
-        # Derivative of the cost wrt to the weights and biases,
-        # averaged over all training samples
-        dc_dw1 = dc_dz1.dot(dz1_dw1) / x.shape[1]
-        dc_db1 = dc_dz1.mean(axis=1, keepdims=True)
+        for l in reversed(range(len(self.weights))):
+            prev_a = self.a[l-1] if l else x # in, n
+            dz_dw = prev_a.T # n, in
+            da_dz = d_sigmoid(self.z[l]) # out, n
+            if l == len(self.weights) - 1:
+                dc_da = self.a[l] - y # out, n
+            else:
+                dzl1_da = self.weights[l+1].T # out, outl1
+                dc_dzl1 = dc_dz[l+1] # outl1, n
+                dc_da = dzl1_da.dot(dc_dzl1) # out, n
 
-        ### Previous layer gradients
+            # Derivative of the cost wrt to the neuron outputs `z` for layer `l`
+            dc_dz[l] = da_dz * dc_da # out, n
 
-        dz1_da0 = self.weights[1].T # k, j
-        dc_da0 = dz1_da0.dot(dc_dz1) # k, n
+            # Derivative of the cost wrt to the weights and biases,
+            # averaged over all training samples
+            dc_dw[l] = dc_dz[l].dot(dz_dw) / x.shape[1]
+            dc_db[l] = dc_dz[l].mean(axis=1, keepdims=True)
 
-        dz0_dw0 = x.T # n, m
-        da0_dz0 = d_sigmoid(self.z[0]) # k, n
-
-        # Derivative of the cost wrt to the neuron outputs `z1`
-        dc_dz0 = da0_dz0 * dc_da0 # k, n
-
-        # Derivative of the cost wrt to the weights and biases,
-        # averaged over all training samples
-        dc_dw0 = dc_dz0.dot(dz0_dw0) / x.shape[1]
-        dc_db0 = dc_dz0.mean(axis=1, keepdims=True)
-
-        return (dc_dw1, dc_db1, dc_dw0, dc_db0)
+        return (dc_dw, dc_db)
 
     def grad_desc(self, x, y, lr):
         self.forward(x)
-        d_weights1, d_biases1, d_weights0, d_biases0 = self.nudges(x, y)
-
-        self.weights[1] -= lr * d_weights1
-        self.biases[1] -= lr * d_biases1
-
-        self.weights[0] -= lr * d_weights0
-        self.biases[0] -= lr * d_biases0
+        d_weights, d_biases = self.nudges(x, y)
+        for l in range(len(self.weights)):
+            self.weights[l] -= lr * d_weights[l]
+            self.biases[l] -= lr * d_biases[l]
 
     def cost(self, x, y):
         preds = self.forward(x)
@@ -118,14 +110,11 @@ x_train = normalise(x_train)
 x_test, y_test = mnist.test_images(), mnist.test_labels()
 x_test = normalise(x_test)
 
-LEARNING_RATE = 3
+LEARNING_RATE = 5
 EPOCHS = 10
-BATCH_SIZE = 100
+BATCH_SIZE = 10
 
-# j:10, k: 16 (hidden), m: 784
-HIDDEN_SIZE = 16
-
-net = Network([x_train.shape[1], HIDDEN_SIZE, y_train.shape[1]])
+net = Network([x_train.shape[1], 30, y_train.shape[1]])
 
 x_train_batched = x_train.reshape(-1, BATCH_SIZE, x_train.shape[1])
 y_train_batched = y_train.reshape(-1, BATCH_SIZE, y_train.shape[1])
@@ -136,4 +125,4 @@ for i in range(EPOCHS):
 
     cst = net.cost(x_train.T, y_train.T)
     acc = net.accuracy(x_test.T, y_test.T)
-    print(f"{i}: cost = {cst:.5f}, accuracy = {acc:.3f}")
+    print(f"Epoch {i+1}/{EPOCHS}: cost = {cst:.5f}, accuracy = {acc:.3f}")
