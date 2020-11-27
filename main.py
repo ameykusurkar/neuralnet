@@ -2,6 +2,9 @@ import numpy as np
 
 import mnist
 import network
+import layers
+
+np.random.seed(0)
 
 def accuracy(preds, y):
     pred_labels = preds.argmax(axis=0)
@@ -16,10 +19,10 @@ EPOCHS = 10
 BATCH_SIZE = 10
 
 net = network.Network([
-    network.Linear(x_train.shape[1], 30),
-    network.Sigmoid(),
-    network.Linear(30, y_train.shape[1]),
-    network.Sigmoid(),
+    layers.Linear(x_train.shape[1], 30),
+    layers.Sigmoid(),
+    layers.Linear(30, y_train.shape[1]),
+    layers.Sigmoid(),
 ])
 
 x_train_batched = x_train.reshape(-1, BATCH_SIZE, x_train.shape[1])
